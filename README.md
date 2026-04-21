@@ -50,7 +50,8 @@
 5. 创建成功后，点击进入该数据库详情页。
 6. 在数据库详情页点击 **Console** 标签页，这里可以执行 SQL。
 7. 打开项目根目录下的 `schema.sql` 文件，复制其中的所有 SQL 语句。
-8. 粘贴到 Cloudflare 的 Console 输入框中，点击 **Execute** 执行，初始化表结构和数据。
+8. 粘贴到 Cloudflare 的 Console 输入框中，点击 **Execute** 执行，完成表结构初始化。
+9. （可选）如果你需要一些初始测试数据，打开 `seed.sql` 文件，复制里面的代码，同样在 Console 里粘贴并点击 **Execute**。
 
 ### 2. 部署项目到 Cloudflare Pages
 1. 在 Cloudflare 控制台左侧菜单点击 **Workers & Pages**。
