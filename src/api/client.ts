@@ -13,8 +13,10 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
   if (!response.ok) {
     let errorMsg = 'An error occurred';
     try {
-      const errorData = await response.json() as { error?: string };
-      errorMsg = errorData.error || errorMsg;
+      const errorData = await response.json();
+      if (errorData && typeof errorData === 'object' && 'error' in errorData) {
+        errorMsg = (errorData as { error: string }).error || errorMsg;
+      }
     } catch {
       // ignore
     }
