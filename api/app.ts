@@ -1,83 +1,20 @@
-/**
- * This is a API server
- */
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 
-import express, {
-  type Request,
-  type Response,
-  type NextFunction,
-} from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import path from 'path'
-import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { initDb } from './db/schema.js'
+import problemsRouter from './routes/problems.js';
+import checkinsRouter from './routes/checkins.js';
+import reviewsRouter from './routes/reviews.js';
+import statsRouter from './routes/stats.js';
+import type { Bindings } from './routes/problems.js';
 
-import authRoutes from './routes/auth.js'
-import problemsRouter from './routes/problems.js'
-import checkinsRouter from './routes/checkins.js'
-import reviewsRouter from './routes/reviews.js'
-import statsRouter from './routes/stats.js'
+const app = new Hono<{ Bindings: Bindings }>();
 
-// for esm mode
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+app.use('/api/*', cors());
 
-// load env
-dotenv.config()
+// Routes
+app.route('/api/problems', problemsRouter);
+app.route('/api/checkins', checkinsRouter);
+app.route('/api/reviews', reviewsRouter);
+app.route('/api/stats', statsRouter);
 
-const app: express.Application = express()
-
-// Initialize database
-initDb()
-
-app.use(cors())
-app.use(helmet())
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-
-/**
- * API Routes
- */
-app.use('/api/auth', authRoutes)
-app.use('/api/problems', problemsRouter)
-app.use('/api/checkins', checkinsRouter)
-app.use('/api/reviews', reviewsRouter)
-app.use('/api/stats', statsRouter)
-
-/**
- * health
- */
-app.use(
-  '/api/health',
-  (req: Request, res: Response, next: NextFunction): void => {
-    res.status(200).json({
-      success: true,
-      message: 'ok',
-    })
-  },
-)
-
-/**
- * error handler middleware
- */
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(error.stack)
-  res.status(500).json({
-    success: false,
-    error: 'Server internal error',
-  })
-})
-
-/**
- * 404 handler
- */
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    error: 'API not found',
-  })
-})
-
-export default app
+export default app;

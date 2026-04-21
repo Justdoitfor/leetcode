@@ -1,36 +1,23 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tsconfigPaths from "vite-tsconfig-paths";
-import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { traeSoloBadge } from 'vite-plugin-trae-solo-badge';
+import devServer from '@hono/vite-dev-server';
+import cloudflareAdapter from '@hono/vite-dev-server/cloudflare';
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        plugins: [
-          'react-dev-locator',
-        ],
-      },
-    }),
-    traeBadgePlugin({
-      variant: 'dark',
-      position: 'bottom-right',
-      prodOnly: true,
-      clickable: true,
-      clickUrl: 'https://www.trae.ai/solo?showJoin=1',
-      autoTheme: true,
-      autoThemeTarget: '#root'
-    }), 
+    react(),
     tsconfigPaths(),
+    traeSoloBadge(),
+    devServer({
+      entry: 'api/app.ts',
+      adapter: cloudflareAdapter,
+      injectClientScript: false
+    })
   ],
   server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
     watch: {
       ignored: ['**/.pnpm-store/**', '**/node_modules/**'],
     }

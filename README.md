@@ -1,6 +1,6 @@
 # fkLeetcode — LeetCode 刷题打卡系统
 
-这是一个面向算法学习者的全栈 Web 应用，支持刷题打卡、笔记记录、艾宾浩斯复习调度和数据可视化。项目基于 React 18、Vite、Tailwind CSS 和 Node.js 开发。
+这是一个面向算法学习者的全栈 Web 应用，支持刷题打卡、笔记记录、艾宾浩斯复习调度和数据可视化。项目基于 React 18、Vite、Tailwind CSS 和 Cloudflare 生态 (Hono + D1 Database) 开发。
 
 ## 主要功能
 
@@ -12,7 +12,7 @@
 
 ## 本地开发指南
 
-项目采用前后端一体化仓库（Monorepo 结构），前端使用 Vite，后端为 Express。
+本项目采用 Vite 作为构建工具，通过 `@hono/vite-dev-server` 插件在本地同时运行前端 React 与后端 Hono API，并使用 Wrangler 提供本地的 Cloudflare D1 模拟环境。
 
 ### 环境要求
 
@@ -26,36 +26,57 @@
    pnpm install
    ```
 
-2. 启动开发服务器 (将同时启动前端和后端):
+2. 初始化本地 D1 数据库:
+   ```bash
+   pnpm run db:init
+   ```
+   > 这将在 `.wrangler/state/v3/d1` 目录下创建本地 SQLite 数据库文件，并执行 `schema.sql` 填充表结构和初始测试数据。
+
+3. 启动开发服务器:
    ```bash
    pnpm run dev
    ```
-   
-   - 前端默认运行在 `http://localhost:5173`
-   - 后端默认运行在 `http://localhost:3001`
-
-   > 首次启动时，后端将自动创建 SQLite 数据库（`data.sqlite`）并填充初始模拟数据，方便你快速预览热力图等功能。
+   应用将运行在 `http://localhost:5173`，后端 API 可通过 `/api/*` 访问。
 
 ## 部署说明 (Cloudflare)
 
-根据项目要求，本项目计划部署至 Cloudflare。由于 Cloudflare Workers 原生不支持 Node.js 原生模块 (如 `better-sqlite3` 或完整的 `Express`)，推荐采用以下方案进行迁移与部署：
+项目原生兼容 Cloudflare Pages 和 Cloudflare Workers 架构。
 
-### 1. 数据库迁移 (Cloudflare D1)
-目前本地开发使用的是 `better-sqlite3`。要部署到 Cloudflare，需将数据库切换为 [Cloudflare D1](https://developers.cloudflare.com/d1/)：
-- 使用 Wrangler 命令行创建 D1 数据库。
-- 将 `api/db/schema.ts` 中的建表语句导入到 D1。
+### 1. 创建远程 D1 数据库
 
-### 2. 后端迁移 (Hono 或 Cloudflare Pages Functions)
-将现有的 Express 路由迁移为 [Hono](https://hono.dev/) 框架（Hono 拥有和 Express 相似的 API 并且是为 Edge 环境量身定做的）：
-- 替换 `express` 实例为 `new Hono()`。
-- 使用 `@cloudflare/workers-types` 中的 `D1Database` 接口进行数据库操作，替代 `better-sqlite3`。
+首先在你的 Cloudflare 账号中创建一个 D1 数据库：
 
-### 3. 部署前端 (Cloudflare Pages)
-- 在 Cloudflare Dashboard 中创建一个 Pages 项目。
-- 连接你的 GitHub 仓库。
-- 构建命令设置为 `pnpm run build` 或 `npm run build`。
-- 输出目录设置为 `dist`。
-- 如果后端已经用 Hono 重构并配置了 `wrangler.toml`，可以直接将后端部署为 Worker 并将前端 Pages 的 `/api` 请求代理到 Worker。
+```bash
+npx wrangler d1 create fkleetcode-db
+```
+
+记下输出的 `database_id`，将其更新到项目根目录的 `wrangler.toml` 文件中：
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "fkleetcode-db"
+database_id = "这里填入你的database_id"
+```
+
+### 2. 初始化远程数据库结构
+
+将本地的表结构和初始数据导入到远程 D1 数据库：
+
+```bash
+npx wrangler d1 execute fkleetcode-db --remote --file=./schema.sql
+```
+
+### 3. 部署到 Cloudflare
+
+你可以将项目构建并发布到 Cloudflare Pages（同时包含静态前端资产和后端 Functions）：
+
+```bash
+pnpm run build
+npx wrangler pages deploy dist --project-name=fkleetcode
+```
+
+> **注意**：你需要在 Cloudflare Pages Dashboard 中为该项目绑定对应的 D1 数据库 (变量名设为 `DB`)。
 
 ## 贡献
 

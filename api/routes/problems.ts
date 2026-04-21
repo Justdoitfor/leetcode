@@ -1,8 +1,12 @@
-import express from 'express';
+import { Hono } from 'hono';
 import { z } from 'zod';
-import db from '../db/database.js';
+import { zValidator } from '@hono/zod-validator';
 
-const router = express.Router();
+export type Bindings = {
+  DB: D1Database;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
 
 const problemSchema = z.object({
   leetcode_id: z.number().optional().nullable(),
@@ -14,10 +18,12 @@ const problemSchema = z.object({
 });
 
 // GET /api/problems
-router.get('/', (req, res) => {
-  const { difficulty, tag, search } = req.query;
+app.get('/', async (c) => {
+  const difficulty = c.req.query('difficulty');
+  const tag = c.req.query('tag');
+  const search = c.req.query('search');
   
-  let query = 'SELECT p.*, COUNT(c.id) as checkins_count, MAX(c.checked_at) as last_checkin FROM problems p LEFT JOIN checkins c ON p.id = c.problem_id WHERE 1=1';
+  let query = 'SELECT p.*, COUNT(ch.id) as checkins_count, MAX(ch.checked_at) as last_checkin FROM problems p LEFT JOIN checkins ch ON p.id = ch.problem_id WHERE 1=1';
   const params: any[] = [];
 
   if (difficulty) {
@@ -37,79 +43,79 @@ router.get('/', (req, res) => {
 
   query += ' GROUP BY p.id ORDER BY p.id DESC';
 
-  const stmt = db.prepare(query);
-  const rows = stmt.all(...params);
+  const { results } = await c.env.DB.prepare(query).bind(...params).all();
 
-  res.json(rows.map((row: any) => ({
+  return c.json(results.map((row: any) => ({
     ...row,
     tags: row.tags ? JSON.parse(row.tags) : []
   })));
 });
 
 // POST /api/problems
-router.post('/', (req, res) => {
+app.post('/', zValidator('json', problemSchema), async (c) => {
+  const data = c.req.valid('json');
+  
   try {
-    const data = problemSchema.parse(req.body);
-    const stmt = db.prepare(`
+    const result = await c.env.DB.prepare(`
       INSERT INTO problems (leetcode_id, title, title_zh, difficulty, tags, url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    const result = stmt.run(
-      data.leetcode_id,
+      VALUES (?, ?, ?, ?, ?, ?) RETURNING id
+    `).bind(
+      data.leetcode_id ?? null,
       data.title,
-      data.title_zh,
+      data.title_zh ?? null,
       data.difficulty,
       JSON.stringify(data.tags),
-      data.url
-    );
-    res.status(201).json({ id: result.lastInsertRowid, ...data });
+      data.url ?? null
+    ).first();
+    
+    return c.json({ id: result?.id, ...data }, 201);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data', details: error });
+    return c.json({ error: 'Invalid data or duplicate leetcode_id' }, 400);
   }
 });
 
 // GET /api/problems/:id
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  const problem = db.prepare('SELECT * FROM problems WHERE id = ?').get(id) as any;
-  if (!problem) return res.status(404).json({ error: 'Not found' });
+app.get('/:id', async (c) => {
+  const id = c.req.param('id');
+  const problem = await c.env.DB.prepare('SELECT * FROM problems WHERE id = ?').bind(id).first();
+  if (!problem) return c.json({ error: 'Not found' }, 404);
   
-  problem.tags = problem.tags ? JSON.parse(problem.tags) : [];
+  problem.tags = problem.tags ? JSON.parse(problem.tags as string) : [];
   
-  const checkins = db.prepare('SELECT * FROM checkins WHERE problem_id = ? ORDER BY checked_at DESC, created_at DESC').all(id);
+  const { results: checkins } = await c.env.DB.prepare('SELECT * FROM checkins WHERE problem_id = ? ORDER BY checked_at DESC, created_at DESC').bind(id).all();
   
-  res.json({ ...problem, checkins });
+  return c.json({ ...problem, checkins });
 });
 
 // PUT /api/problems/:id
-router.put('/:id', (req, res) => {
-  const { id } = req.params;
+app.put('/:id', zValidator('json', problemSchema), async (c) => {
+  const id = c.req.param('id');
+  const data = c.req.valid('json');
+  
   try {
-    const data = problemSchema.parse(req.body);
-    const stmt = db.prepare(`
+    await c.env.DB.prepare(`
       UPDATE problems SET leetcode_id=?, title=?, title_zh=?, difficulty=?, tags=?, url=?
       WHERE id=?
-    `);
-    stmt.run(
-      data.leetcode_id,
+    `).bind(
+      data.leetcode_id ?? null,
       data.title,
-      data.title_zh,
+      data.title_zh ?? null,
       data.difficulty,
       JSON.stringify(data.tags),
-      data.url,
+      data.url ?? null,
       id
-    );
-    res.json({ id, ...data });
+    ).run();
+    return c.json({ id: parseInt(id), ...data });
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data', details: error });
+    return c.json({ error: 'Invalid data' }, 400);
   }
 });
 
 // DELETE /api/problems/:id
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  db.prepare('DELETE FROM problems WHERE id = ?').run(id);
-  res.status(204).send();
+app.delete('/:id', async (c) => {
+  const id = c.req.param('id');
+  await c.env.DB.prepare('DELETE FROM problems WHERE id = ?').bind(id).run();
+  return new Response(null, { status: 204 });
 });
 
-export default router;
+export default app;

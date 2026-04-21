@@ -1,26 +1,26 @@
-import express from 'express';
-import db from '../db/database.js';
+import { Hono } from 'hono';
+import type { Bindings } from './problems.js';
 
-const router = express.Router();
+const app = new Hono<{ Bindings: Bindings }>();
 
 // GET /api/stats/overview
-router.get('/overview', (req, res) => {
-  const total = db.prepare('SELECT COUNT(*) as count FROM problems').get() as { count: number };
-  const completed = db.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins').get() as { count: number };
-  const easy = db.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Easy'").get() as { count: number };
-  const medium = db.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Medium'").get() as { count: number };
-  const hard = db.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Hard'").get() as { count: number };
+app.get('/overview', async (c) => {
+  const total = await c.env.DB.prepare('SELECT COUNT(*) as count FROM problems').first() as { count: number };
+  const completed = await c.env.DB.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins').first() as { count: number };
+  const easy = await c.env.DB.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Easy'").first() as { count: number };
+  const medium = await c.env.DB.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Medium'").first() as { count: number };
+  const hard = await c.env.DB.prepare("SELECT COUNT(*) as count FROM problems WHERE difficulty = 'Hard'").first() as { count: number };
   
   // This week/month completed
   const today = new Date();
   const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   
-  const weekly = db.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').get(lastWeek) as { count: number };
-  const monthly = db.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').get(lastMonth) as { count: number };
+  const weekly = await c.env.DB.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').bind(lastWeek).first() as { count: number };
+  const monthly = await c.env.DB.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').bind(lastMonth).first() as { count: number };
   
   // Calculate streak
-  const streakRows = db.prepare('SELECT DISTINCT checked_at FROM checkins ORDER BY checked_at DESC').all() as { checked_at: string }[];
+  const { results: streakRows } = await c.env.DB.prepare('SELECT DISTINCT checked_at FROM checkins ORDER BY checked_at DESC').all() as { results: { checked_at: string }[] };
   let streak = 0;
   let currentDate = today;
   for (const row of streakRows) {
@@ -34,20 +34,20 @@ router.get('/overview', (req, res) => {
     }
   }
 
-  res.json({
-    total: total.count,
-    completed: completed.count,
-    easy: easy.count,
-    medium: medium.count,
-    hard: hard.count,
-    weekly: weekly.count,
-    monthly: monthly.count,
+  return c.json({
+    total: total?.count || 0,
+    completed: completed?.count || 0,
+    easy: easy?.count || 0,
+    medium: medium?.count || 0,
+    hard: hard?.count || 0,
+    weekly: weekly?.count || 0,
+    monthly: monthly?.count || 0,
     streak
   });
 });
 
 // GET /api/stats/heatmap
-router.get('/heatmap', (req, res) => {
+app.get('/heatmap', async (c) => {
   const query = `
     SELECT checked_at as date, COUNT(*) as count
     FROM checkins
@@ -55,13 +55,13 @@ router.get('/heatmap', (req, res) => {
     GROUP BY checked_at
     ORDER BY checked_at ASC
   `;
-  const rows = db.prepare(query).all();
-  res.json(rows);
+  const { results } = await c.env.DB.prepare(query).all();
+  return c.json(results);
 });
 
 // GET /api/stats/tags
-router.get('/tags', (req, res) => {
-  const problems = db.prepare('SELECT tags FROM problems').all() as { tags: string }[];
+app.get('/tags', async (c) => {
+  const { results: problems } = await c.env.DB.prepare('SELECT tags FROM problems').all() as { results: { tags: string }[] };
   const tagCounts: Record<string, number> = {};
   
   for (const p of problems) {
@@ -77,11 +77,11 @@ router.get('/tags', (req, res) => {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
     
-  res.json(result);
+  return c.json(result);
 });
 
 // GET /api/stats/weekly
-router.get('/weekly', (req, res) => {
+app.get('/weekly', async (c) => {
   const query = `
     SELECT c.checked_at as date, p.difficulty, COUNT(*) as count
     FROM checkins c
@@ -90,7 +90,7 @@ router.get('/weekly', (req, res) => {
     GROUP BY c.checked_at, p.difficulty
     ORDER BY c.checked_at ASC
   `;
-  const rows = db.prepare(query).all() as { date: string, difficulty: string, count: number }[];
+  const { results: rows } = await c.env.DB.prepare(query).all() as { results: { date: string, difficulty: string, count: number }[] };
   
   // Transform to chart format
   const byDate: Record<string, any> = {};
@@ -101,7 +101,7 @@ router.get('/weekly', (req, res) => {
     byDate[row.date][row.difficulty] = row.count;
   }
   
-  res.json(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)));
+  return c.json(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)));
 });
 
-export default router;
+export default app;
