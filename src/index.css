@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #F8F7F4;
+    --color-surface: #FFFFFF;
+    --color-border: rgba(0,0,0,0.08);
+    --color-border-strong: rgba(0,0,0,0.14);
+  
+    --color-easy: #639922;
+    --color-easy-bg: #EAF3DE;
+    --color-medium: #BA7517;
+    --color-medium-bg: #FAEEDA;
+    --color-hard: #A32D2D;
+    --color-hard-bg: #FCEBEB;
+  
+    --color-primary: #3B6D11;
+    --color-primary-hover: #27500A;
+    --color-primary-bg: #EAF3DE;
+  
+    --color-review: #534AB7;
+    --color-review-bg: #EEEDFE;
+    --color-review-border: #CECBF6;
+  
+    --color-text-primary: #1A1A1A;
+    --color-text-secondary: #5F5E5A;
+    --color-text-muted: #B4B2A9;
+  
+    --color-streak: #854F0B;
+    --color-streak-bg: #FAEEDA;
+  
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    @apply bg-[var(--color-bg)] text-[var(--color-text-primary)] font-sans antialiased;
+    font-family: 'DM Sans', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'DM Mono', 'Fira Code', monospace;
+  }
+}
