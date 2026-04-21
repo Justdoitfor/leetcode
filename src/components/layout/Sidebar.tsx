@@ -15,7 +15,7 @@ export function Sidebar() {
           <div className="w-6 h-6 rounded-md bg-[var(--color-primary)] flex items-center justify-center text-white">
             <Target size={14} />
           </div>
-          <span className="font-bold text-[var(--color-text-primary)] text-sm tracking-wide">AlgoLog</span>
+          <span className="font-bold text-[var(--color-text-primary)] text-sm tracking-wide">fkLeetcode</span>
         </div>
       </div>
 

@@ -17,7 +17,7 @@ export function Topbar() {
       if (location.pathname.endsWith('/checkin')) return '新增打卡记录';
       return '题目详情';
     }
-    return titleMap[location.pathname] || 'AlgoLog';
+    return titleMap[location.pathname] || 'fkLeetcode';
   };
 
   return (

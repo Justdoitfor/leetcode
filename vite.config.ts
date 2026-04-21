@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import traeSoloBadge from 'vite-plugin-trae-solo-badge';
 import devServer from '@hono/vite-dev-server';
 import cloudflareAdapter from '@hono/vite-dev-server/cloudflare';
 
@@ -10,7 +9,6 @@ export default defineConfig({
   plugins: [
     react(),
     tsconfigPaths(),
-    traeSoloBadge(),
     devServer({
       entry: 'api/app.ts',
       adapter: cloudflareAdapter,

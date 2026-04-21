@@ -1,21 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAppStore } from '../stores/index.js';
 import { Card } from '../components/ui/Card.js';
 import { Badge } from '../components/ui/Badge.js';
 import { Button } from '../components/ui/Button.js';
 import { Input } from '../components/ui/Input.js';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, Plus } from 'lucide-react';
 
 export function Problems() {
   const { problems, fetchProblems, loading } = useAppStore();
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const search = searchParams.get('search') || '';
+  const difficulty = searchParams.get('difficulty') || '';
 
   useEffect(() => {
     fetchProblems({ search, difficulty });
   }, [fetchProblems, search, difficulty]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (e.target.value) newParams.set('search', e.target.value);
+    else newParams.delete('search');
+    setSearchParams(newParams);
+  };
+
+  const handleDifficultyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (e.target.value) newParams.set('difficulty', e.target.value);
+    else newParams.delete('difficulty');
+    setSearchParams(newParams);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,7 +41,7 @@ export function Problems() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <Input 
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="搜索题目名称或编号..." 
               className="pl-9"
             />
@@ -33,7 +49,7 @@ export function Problems() {
           <select 
             className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-primary)]"
             value={difficulty}
-            onChange={e => setDifficulty(e.target.value)}
+            onChange={handleDifficultyChange}
           >
             <option value="">全部难度</option>
             <option value="Easy">简单</option>
