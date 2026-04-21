@@ -10,14 +10,22 @@ import { CheckCircle2, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
-  const { stats, fetchStats, heatmap, tagsStats, weeklyStats, reviews, fetchTodayReviews } = useAppStore();
+  const { stats, fetchStats, heatmap, tagsStats, weeklyStats, reviews, fetchTodayReviews, error } = useAppStore();
 
   useEffect(() => {
     fetchStats();
     fetchTodayReviews();
   }, [fetchStats, fetchTodayReviews]);
 
-  if (!stats) return <div className="animate-pulse space-y-4">Loading...</div>;
+  if (!stats) return (
+    <div className="flex flex-col items-center justify-center p-10 space-y-4">
+      <div className="animate-pulse">Loading data...</div>
+      {error && <div className="text-red-500 bg-red-50 p-4 rounded-md max-w-md break-words text-sm">
+        <p className="font-bold mb-2">API Error:</p>
+        {error}
+      </div>}
+    </div>
+  );
 
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 

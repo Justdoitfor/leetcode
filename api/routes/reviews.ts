@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { calculateNextReview } from '../utils/sm2.js';
-import type { Bindings } from './problems.js';
+import { calculateNextReview } from '../utils/sm2';
+import type { Bindings } from './problems';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
