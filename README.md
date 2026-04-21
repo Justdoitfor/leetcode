@@ -38,45 +38,39 @@
    ```
    应用将运行在 `http://localhost:5173`，后端 API 可通过 `/api/*` 访问。
 
-## 部署说明 (Cloudflare)
+## 部署说明 (Cloudflare Pages 图形化部署)
 
-项目原生兼容 Cloudflare Pages 和 Cloudflare Workers 架构。
+如果你不熟悉命令行，可以完全通过 Cloudflare 的网页控制台 (Dashboard) 进行部署。
 
-### 1. 创建远程 D1 数据库
+### 1. 创建 D1 数据库
+1. 登录 [Cloudflare 控制台](https://dash.cloudflare.com/)。
+2. 在左侧菜单中找到并点击 **Workers & Pages** -> **D1**。
+3. 点击右侧的 **Create database** 按钮。
+4. 输入数据库名称，比如 `fkleetcode-db`，然后点击创建。
+5. 创建成功后，点击进入该数据库详情页。
+6. 在数据库详情页点击 **Console** 标签页，这里可以执行 SQL。
+7. 打开项目根目录下的 `schema.sql` 文件，复制其中的所有 SQL 语句。
+8. 粘贴到 Cloudflare 的 Console 输入框中，点击 **Execute** 执行，初始化表结构和数据。
 
-首先在你的 Cloudflare 账号中创建一个 D1 数据库：
+### 2. 部署项目到 Cloudflare Pages
+1. 在 Cloudflare 控制台左侧菜单点击 **Workers & Pages**。
+2. 点击 **Create application**，选择 **Pages** 标签，然后点击 **Connect to Git**。
+3. 授权连接你的 GitHub 账号，选择当前的 `fkLeetcode` 仓库。
+4. 在 "Set up builds and deployments" 页面，进行以下设置：
+   - **Project name**: `fkleetcode` (或你喜欢的名字)
+   - **Production branch**: `main`
+   - **Framework preset**: 选择 `None`
+   - **Build command**: 填入 `npm run build`
+   - **Build output directory**: 填入 `dist`
+5. **最重要的一步：绑定数据库**
+   - 展开 **Environment variables (advanced)** 选项卡。
+   - 不要直接点保存！继续向下找到 **D1 database bindings** 区域。
+   - 点击 **Add binding**。
+   - **Variable name** 必须严格填写为：`DB`。
+   - **D1 database** 的下拉菜单中，选择你刚刚在第 1 步创建的数据库 (比如 `fkleetcode-db`)。
+6. 最后点击底部的 **Save and Deploy**。
 
-```bash
-npx wrangler d1 create fkleetcode-db
-```
-
-记下输出的 `database_id`，将其更新到项目根目录的 `wrangler.toml` 文件中：
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "fkleetcode-db"
-database_id = "这里填入你的database_id"
-```
-
-### 2. 初始化远程数据库结构
-
-将本地的表结构和初始数据导入到远程 D1 数据库：
-
-```bash
-npx wrangler d1 execute fkleetcode-db --remote --file=./schema.sql
-```
-
-### 3. 部署到 Cloudflare
-
-你可以将项目构建并发布到 Cloudflare Pages（同时包含静态前端资产和后端 Functions）：
-
-```bash
-pnpm run build
-npx wrangler pages deploy dist --project-name=fkleetcode
-```
-
-> **注意**：你需要在 Cloudflare Pages Dashboard 中为该项目绑定对应的 D1 数据库 (变量名设为 `DB`)。
+Cloudflare Pages 会自动拉取代码、执行构建，并自动为你分配一个 `.pages.dev` 的访问域名。由于 Hono 与 Cloudflare Pages 的原生兼容，后端的 API 也会一并自动部署并生效。
 
 ## 贡献
 

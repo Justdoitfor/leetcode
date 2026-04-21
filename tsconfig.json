@@ -30,7 +30,7 @@
     },
     "types": [
       "node",
-      "express"
+      "@cloudflare/workers-types"
     ]
   },
   "include": [
