@@ -20,8 +20,7 @@
 - Tailwind CSS（样式，使用自定义 design token）
 
 ### 后端
-- Node.js + Express + TypeScript
-- cloudeflare D1 Database
+- Cloudflare D1
 - Zod（请求校验）
 - cors + helmet（安全中间件）
 
@@ -236,7 +235,7 @@ Button Secondary:
     柱子按 Easy/Medium/Hard 颜色堆叠（StackedBar）
 
 侧边栏：
-  顶部 Logo（绿色小图标 + "AlgoLog"文字）
+  顶部 Logo（绿色小图标 + "fkLeetcode"文字）
   导航菜单项：仪表盘 / 题目列表 / 今日复习（红点显示待复习数）/ 数据分析
   难度快速筛选：简单 / 中等 / 困难（点击跳转到带过滤的题目列表）
   底部连续打卡天数徽章
@@ -335,5 +334,3 @@ backend/
 8. 所有日期使用 date-fns 格式化，支持中文相对时间（"今天"/"昨天"/"3天前"）
 9. 代码块复制按钮点击后图标变为✓，2秒后还原
 10. 整体 border-radius 统一，不使用 sharp 方角
-
-
