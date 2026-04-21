@@ -13,7 +13,7 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
   if (!response.ok) {
     let errorMsg = 'An error occurred';
     try {
-      const errorData = await response.json();
+      const errorData = await response.json() as { error?: string };
       errorMsg = errorData.error || errorMsg;
     } catch {
       // ignore
