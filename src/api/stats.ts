@@ -1,5 +1,5 @@
 import { fetchApi } from './client.js';
-import type { OverviewStats } from '../types/index.js';
+import type { OverviewStats, ScatterData } from '../types/index.js';
 
 export const statsApi = {
   overview: () => fetchApi<OverviewStats>('/stats/overview'),
@@ -8,5 +8,7 @@ export const statsApi = {
   
   tags: () => fetchApi<{ name: string; count: number }[]>('/stats/tags'),
   
-  weekly: () => fetchApi<{ date: string; Easy: number; Medium: number; Hard: number }[]>('/stats/weekly')
+  weekly: () => fetchApi<{ date: string; Easy: number; Medium: number; Hard: number }[]>('/stats/weekly'),
+  
+  scatter: () => fetchApi<ScatterData[]>('/stats/scatter')
 };

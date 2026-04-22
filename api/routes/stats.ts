@@ -18,6 +18,8 @@ app.get('/overview', async (c) => {
   
   const weekly = await c.env.DB.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').bind(lastWeek).first() as { count: number };
   const monthly = await c.env.DB.prepare('SELECT COUNT(DISTINCT problem_id) as count FROM checkins WHERE checked_at >= ?').bind(lastMonth).first() as { count: number };
+  const avgTimeRes = await c.env.DB.prepare('SELECT AVG(duration_min) as avg_time FROM checkins WHERE duration_min IS NOT NULL').first() as { avg_time: number };
+  const avg_time = avgTimeRes?.avg_time ? Math.round(avgTimeRes.avg_time) : 0;
   
   // Calculate streak
   const { results: streakRows } = await c.env.DB.prepare('SELECT DISTINCT checked_at FROM checkins ORDER BY checked_at DESC').all() as { results: { checked_at: string }[] };
@@ -42,6 +44,7 @@ app.get('/overview', async (c) => {
     hard: hard?.count || 0,
     weekly: weekly?.count || 0,
     monthly: monthly?.count || 0,
+    avg_time,
     streak
   });
 });
@@ -102,6 +105,19 @@ app.get('/weekly', async (c) => {
   }
   
   return c.json(Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)));
+});
+
+// GET /api/stats/scatter
+app.get('/scatter', async (c) => {
+  const query = `
+    SELECT c.checked_at as date, c.duration_min as time, p.difficulty, p.title_zh, p.title
+    FROM checkins c
+    JOIN problems p ON c.problem_id = p.id
+    WHERE c.duration_min IS NOT NULL
+    ORDER BY c.checked_at ASC
+  `;
+  const { results } = await c.env.DB.prepare(query).all();
+  return c.json(results);
 });
 
 export default app;

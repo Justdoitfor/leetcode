@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, CalendarClock, BarChart3, Target } from 'lucide-react';
+import { LayoutDashboard, ListTodo, CalendarClock, BarChart3 } from 'lucide-react';
 import { useAppStore } from '../../stores/index.js';
+import iconSvg from '../../assets/icon.svg';
 
 export function Sidebar() {
   const { reviews } = useAppStore();
@@ -12,9 +13,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-[52px] flex items-center px-5 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-[var(--color-primary)] flex items-center justify-center text-white">
-            <Target size={14} />
-          </div>
+          <img src={iconSvg} alt="logo" className="w-6 h-6 object-contain" />
           <span className="font-bold text-[var(--color-text-primary)] text-sm tracking-wide">fkLeetcode</span>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { problemsApi } from '../api/problems.js';
 import { checkinsApi } from '../api/checkins.js';
 import { reviewsApi } from '../api/reviews.js';
 import { statsApi } from '../api/stats.js';
-import type { Problem, ProblemDetail, Checkin, Review, OverviewStats } from '../types/index.js';
+import type { Problem, ProblemDetail, Checkin, Review, OverviewStats, ScatterData } from '../types/index.js';
 
 interface AppState {
   problems: Problem[];
@@ -13,6 +13,7 @@ interface AppState {
   heatmap: { date: string; count: number }[];
   tagsStats: { name: string; count: number }[];
   weeklyStats: { date: string; Easy: number; Medium: number; Hard: number }[];
+  scatterStats: ScatterData[];
   
   loading: boolean;
   error: string | null;
@@ -37,6 +38,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   heatmap: [],
   tagsStats: [],
   weeklyStats: [],
+  scatterStats: [],
   
   loading: false,
   error: null,
@@ -114,17 +116,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchStats: async () => {
     set({ loading: true, error: null });
     try {
-      const [overview, heatmap, tags, weekly] = await Promise.all([
+      const [overview, heatmap, tags, weekly, scatter] = await Promise.all([
         statsApi.overview(),
         statsApi.heatmap(),
         statsApi.tags(),
-        statsApi.weekly()
+        statsApi.weekly(),
+        statsApi.scatter()
       ]);
       set({
         stats: overview,
         heatmap,
         tagsStats: tags,
         weeklyStats: weekly,
+        scatterStats: scatter,
         loading: false
       });
     } catch (e: any) {

@@ -48,5 +48,14 @@ export interface OverviewStats {
   hard: number;
   weekly: number;
   monthly: number;
+  avg_time: number;
   streak: number;
+}
+
+export interface ScatterData {
+  date: string;
+  time: number;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  title_zh: string | null;
+  title: string;
 }

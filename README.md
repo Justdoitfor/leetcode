@@ -71,7 +71,10 @@
    - **D1 database** 的下拉菜单中，选择你刚刚在第 1 步创建的数据库 (比如 `fkleetcode-db`)。
 6. 最后点击底部的 **Save and Deploy**。
 
-Cloudflare Pages 会自动拉取代码、执行构建，并自动为你分配一个 `.pages.dev` 的访问域名。由于 Hono 与 Cloudflare Pages 的原生兼容，后端的 API 也会一并自动部署并生效。
+### 3. 如何修改默认分配的 `xxx.pages.dev` 域名
+Cloudflare Pages 默认分配的 `*.pages.dev` 域名是与你创建应用时填写的 **Project name** 强绑定的。如果你发现当前域名是 `leetcode-ahs.pages.dev`，想改成 `fkleetcode.pages.dev`：
+- **方案 A (推荐)**: 重新创建一个新的 Pages 项目，在 "Set up builds and deployments" 时，把 **Project name** 明确填写为 `fkleetcode`，按照同样的步骤绑定一次 D1 数据库即可。旧的项目可以直接在设置里删除。
+- **方案 B (自定义域名)**: 如果你有自己的域名（比如 `fkleetcode.com`），可以在该 Pages 项目的 **Custom domains (自定义域)** 选项卡中，点击 "Set up a custom domain" 绑定你自己的专属域名。
 
 ## 贡献
 

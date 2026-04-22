@@ -2,9 +2,10 @@ import React, { useEffect } from 'react';
 import { useAppStore } from '../stores/index.js';
 import { Card } from '../components/ui/Card.js';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
+import { ScatterChartComponent } from '../components/charts/ScatterChartComponent.js';
 
 export function Stats() {
-  const { stats, tagsStats, fetchStats, loading } = useAppStore();
+  const { stats, tagsStats, scatterStats, fetchStats, loading } = useAppStore();
 
   useEffect(() => {
     fetchStats();
@@ -38,7 +39,7 @@ export function Stats() {
         <Card className="flex flex-col items-center justify-center py-6">
           <span className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">平均耗时</span>
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-[var(--color-text-primary)]">~25</span>
+            <span className="text-3xl font-bold text-[var(--color-text-primary)]">{stats.avg_time || 0}</span>
             <span className="text-sm font-medium text-[var(--color-text-muted)]">min</span>
           </div>
         </Card>
@@ -70,8 +71,8 @@ export function Stats() {
         
         <Card className="h-[350px] flex flex-col">
           <h2 className="text-sm font-bold text-[var(--color-text-primary)] mb-4">耗时分布散点图</h2>
-          <div className="flex-1 min-h-0 flex items-center justify-center bg-gray-50 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)]">
-            <span className="text-sm text-[var(--color-text-muted)]">功能开发中...</span>
+          <div className="flex-1 min-h-0 bg-white rounded-[var(--radius-md)]">
+            <ScatterChartComponent data={scatterStats} />
           </div>
         </Card>
       </div>
