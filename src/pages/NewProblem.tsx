@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../stores/index.js';
 import { Card } from '../components/ui/Card.js';
 import { Button } from '../components/ui/Button.js';
 import { Input } from '../components/ui/Input.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export function NewProblem() {
-  const { createProblem } = useAppStore();
+  const { id } = useParams();
+  const isEditing = Boolean(id);
+  const { createProblem, updateProblem, fetchProblem, currentProblem } = useAppStore();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     leetcode_id: '',
@@ -17,6 +19,25 @@ export function NewProblem() {
     url: ''
   });
 
+  useEffect(() => {
+    if (isEditing && id) {
+      fetchProblem(parseInt(id));
+    }
+  }, [isEditing, id, fetchProblem]);
+
+  useEffect(() => {
+    if (isEditing && currentProblem && currentProblem.id === parseInt(id!)) {
+      setFormData({
+        leetcode_id: currentProblem.leetcode_id?.toString() || '',
+        title: currentProblem.title || '',
+        title_zh: currentProblem.title_zh || '',
+        difficulty: currentProblem.difficulty || 'Easy',
+        tags: currentProblem.tags ? currentProblem.tags.join(', ') : '',
+        url: currentProblem.url || ''
+      });
+    }
+  }, [isEditing, currentProblem, id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -25,8 +46,14 @@ export function NewProblem() {
         leetcode_id: formData.leetcode_id ? parseInt(formData.leetcode_id) : null,
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean)
       };
-      const result = await createProblem(data as any);
-      navigate(`/problems/${result.id}`);
+      
+      if (isEditing && id) {
+        await updateProblem(parseInt(id), data as any);
+        navigate(`/problems/${id}`);
+      } else {
+        const result = await createProblem(data as any);
+        navigate(`/problems/${result.id}`);
+      }
     } catch (error) {
       alert('保存失败，请检查填写内容');
     }
@@ -35,7 +62,9 @@ export function NewProblem() {
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
-        <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-6">新增题目</h2>
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-6">
+          {isEditing ? '编辑题目' : '新增题目'}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">LeetCode 编号</label>

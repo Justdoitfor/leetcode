@@ -76,6 +76,4 @@ Cloudflare Pages 默认分配的 `*.pages.dev` 域名是与你创建应用时填
 - **方案 A (推荐)**: 重新创建一个新的 Pages 项目，在 "Set up builds and deployments" 时，把 **Project name** 明确填写为 `fkleetcode`，按照同样的步骤绑定一次 D1 数据库即可。旧的项目可以直接在设置里删除。
 - **方案 B (自定义域名)**: 如果你有自己的域名（比如 `fkleetcode.com`），可以在该 Pages 项目的 **Custom domains (自定义域)** 选项卡中，点击 "Set up a custom domain" 绑定你自己的专属域名。
 
-## 贡献
 
-后续所有修改和功能迭代请提交至 `main` 分支。每次修改功能后，请确保同步更新此 `README.md` 中的使用说明。

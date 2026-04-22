@@ -21,6 +21,8 @@ interface AppState {
   fetchProblems: (params?: { difficulty?: string; tag?: string; search?: string }) => Promise<void>;
   fetchProblem: (id: number) => Promise<void>;
   createProblem: (data: Partial<Problem>) => Promise<Problem>;
+  updateProblem: (id: number, data: Partial<Problem>) => Promise<Problem>;
+  deleteProblem: (id: number) => Promise<void>;
   
   createCheckin: (data: Partial<Checkin>) => Promise<void>;
   
@@ -69,6 +71,37 @@ export const useAppStore = create<AppState>((set, get) => ({
       const result = await problemsApi.create(data);
       set((state) => ({ problems: [result, ...state.problems], loading: false }));
       return result;
+    } catch (e: any) {
+      set({ error: e.message, loading: false });
+      throw e;
+    }
+  },
+  
+  updateProblem: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const result = await problemsApi.update(id, data);
+      set((state) => ({ 
+        problems: state.problems.map(p => p.id === id ? result : p),
+        currentProblem: state.currentProblem?.id === id ? { ...state.currentProblem, ...result } : state.currentProblem,
+        loading: false 
+      }));
+      return result;
+    } catch (e: any) {
+      set({ error: e.message, loading: false });
+      throw e;
+    }
+  },
+
+  deleteProblem: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      await problemsApi.delete(id);
+      set((state) => ({
+        problems: state.problems.filter(p => p.id !== id),
+        currentProblem: state.currentProblem?.id === id ? null : state.currentProblem,
+        loading: false
+      }));
     } catch (e: any) {
       set({ error: e.message, loading: false });
       throw e;

@@ -16,6 +16,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/problems" element={<Problems />} />
           <Route path="/problems/new" element={<NewProblem />} />
+          <Route path="/problems/:id/edit" element={<NewProblem />} />
           <Route path="/problems/:id" element={<ProblemDetail />} />
           <Route path="/problems/:id/checkin" element={<CheckinForm />} />
           <Route path="/review" element={<Review />} />

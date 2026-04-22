@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/index.js';
 import { Card } from '../components/ui/Card.js';
 import { Badge } from '../components/ui/Badge.js';
 import { Button } from '../components/ui/Button.js';
-import { Clock, PlayCircle, ExternalLink, CalendarDays } from 'lucide-react';
+import { Clock, PlayCircle, ExternalLink, CalendarDays, Edit, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -12,7 +12,8 @@ import 'highlight.js/styles/github.css';
 
 export function ProblemDetail() {
   const { id } = useParams();
-  const { currentProblem, fetchProblem, loading } = useAppStore();
+  const navigate = useNavigate();
+  const { currentProblem, fetchProblem, deleteProblem, loading } = useAppStore();
 
   useEffect(() => {
     if (id) {
@@ -25,6 +26,17 @@ export function ProblemDetail() {
   }
 
   const p = currentProblem;
+
+  const handleDelete = async () => {
+    if (window.confirm('确定要删除这道题目及其所有的打卡和复习记录吗？此操作不可恢复。')) {
+      try {
+        await deleteProblem(p.id);
+        navigate('/problems');
+      } catch (e) {
+        alert('删除失败，请重试。');
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,6 +57,12 @@ export function ProblemDetail() {
             <div className="flex items-center gap-1">
               <PlayCircle size={14} /> {p.checkins.length} 次打卡
             </div>
+            <Link to={`/problems/${p.id}/edit`} className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors ml-2">
+              <Edit size={14} /> 编辑
+            </Link>
+            <button onClick={handleDelete} className="flex items-center gap-1 hover:text-red-500 transition-colors ml-2">
+              <Trash2 size={14} /> 删除
+            </button>
           </div>
           {p.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
